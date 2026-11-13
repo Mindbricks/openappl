@@ -22,6 +22,8 @@ examples/                     example blueprints, each valid against the schema
 rfcs/                         the change process and the RFC template
 GOVERNANCE.md                 stewardship and governance statement
 LICENSE.md, PATENTS.md        licences and the patent commitment
+LICENSE-CC-BY-4.0.txt         official text: CC-BY-4.0 (specification text)
+LICENSE-APACHE-2.0.txt        official text: Apache-2.0 (schema, versions, examples)
 CONTRIBUTING.md               how to contribute (DCO sign-off)
 CODE_OF_CONDUCT.md            Contributor Covenant 2.1
 ```

@@ -1,16 +1,14 @@
 # Licensing
 
 > **Status.** The owner chose these licences on 2026-11-13. They take effect once counsel
-> has reviewed this page and the [patent commitment](PATENTS.md). Before publishing, add
-> the official licence texts as the files named below, copied unchanged from the official
-> sources.
+> has reviewed this page and the [patent commitment](PATENTS.md).
 
 ## Which licence applies to what
 
-| Material | Licence | Licence file |
+| Material | Licence | Licence text |
 |---|---|---|
-| The specification text: the ontology, the language specification, the compiler specification and the documents in `docs/` | Creative Commons Attribution 4.0 International (**CC-BY-4.0**) | `LICENSE-CC-BY-4.0.txt`, from https://creativecommons.org/licenses/by/4.0/legalcode.txt |
-| The schema `openappl.json`, every file in `versions/`, and the example blueprints in `examples/` | Apache License, Version 2.0 (**Apache-2.0**) | `LICENSE-APACHE-2.0.txt`, from https://www.apache.org/licenses/LICENSE-2.0.txt |
+| The specification text: the ontology, the language specification, the compiler specification and the documents in `docs/` | Creative Commons Attribution 4.0 International (**CC-BY-4.0**) | [LICENSE-CC-BY-4.0.txt](LICENSE-CC-BY-4.0.txt) (official legal code, from creativecommons.org) |
+| The schema `openappl.json`, every file in `versions/`, and the example blueprints in `examples/` | Apache License, Version 2.0 (**Apache-2.0**) | [LICENSE-APACHE-2.0.txt](LICENSE-APACHE-2.0.txt) (official text, from apache.org) |
 
 Why two licences: the specification is prose, which is best shared under a documentation
 licence that only asks for attribution; the schema and the examples are machine-readable
