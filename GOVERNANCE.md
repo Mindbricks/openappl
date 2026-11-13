@@ -66,7 +66,10 @@ Until then, the steward consults known implementers directly on such proposals.
 Anyone may contribute: by reporting a problem, proposing a change through the RFC process
 ([rfcs/README.md](rfcs/README.md)), reviewing proposals, or improving the documents.
 Contributions are accepted under the terms in [LICENSE.md](LICENSE.md) and
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md). Every contribution has a person who wrote it and
+stands behind it: AI assistance is allowed when it is disclosed, and contributions opened
+by an agent on its own are not accepted (CONTRIBUTING.md, "AI and automated
+contributions").
 
 ### 3.5 Implementers
 

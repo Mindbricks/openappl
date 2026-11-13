@@ -8,6 +8,7 @@
 | **Version step** | patch / minor / major |
 | **Affects** | Part 1 ontology / Part 2 language specification / Part 3 compiler specification / schema / governance |
 | **Discussion** | link to the pull request |
+| **AI assistance** | none / which tool, and for which sections (see CONTRIBUTING.md) |
 | **Decision** | (filled in by the Editors) |
 
 ## Summary

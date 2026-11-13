@@ -14,6 +14,32 @@ Thank you for helping improve OpenAPPL.
 - **Building a compiler or a tool?** Tell us in an issue; implementers are consulted on
   every change that affects the compiler specification.
 
+## AI and automated contributions
+
+Everything sent to this repository is reviewed by people, and review time is the scarcest
+resource the project has. It cannot keep up with contributions produced at machine speed.
+So, for every pull request, RFC and issue:
+
+- **A person is responsible.** You may use AI tools to help, but you write the
+  contribution, you understand every line of it, and you can explain and defend it in
+  review. "The tool wrote it" is not an answer to a review question.
+- **Say so.** If an AI tool helped produce the content (text, schema changes, examples,
+  RFC sections), state it in the pull request or issue description, in one line: which
+  tool, and for what. Spelling and grammar help needs no mention.
+- **No autonomous submissions.** Pull requests, issues and RFCs opened by an agent or a
+  bot on its own, without a person who wrote and stands behind them, are not accepted.
+- **Low-effort submissions are closed.** Maintainers may close, without a detailed review,
+  a contribution that looks generated and unreviewed: invented facts, rules the
+  specification does not have, changes that do not build or validate, or text that does
+  not answer the reviewer.
+- **The sign-off is personal.** The Developer Certificate of Origin below is a statement
+  made by you about your own contribution; do not sign off work you could not have
+  certified yourself.
+
+This rule is about contributing to the standard. Using AI to *use* the language is a
+different matter: writing your own blueprints with AI agents, for example with the
+mind-set skills, is welcome.
+
 ## Sign your commits
 
 Every commit needs a Developer Certificate of Origin sign-off
