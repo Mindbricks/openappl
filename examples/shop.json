@@ -1,0 +1,378 @@
+{
+  "codename": "shopfront",
+  "projectSettings": {
+    "basicSettings": {
+      "name": "shopfront",
+      "fullname": "Shop",
+      "description": "Customers order products and pay online. The order object is marked as a checkout order, so the compiler adds the payment records, APIs and routes."
+    },
+    "paymentProvidersSettings": {
+      "paymentProviders": [
+        {
+          "name": "stripe",
+          "provider": "stripe",
+          "configuration": [
+            {
+              "name": "secretKey",
+              "value": "$ENV:STRIPE_SECRET_KEY"
+            },
+            {
+              "name": "publishableKey",
+              "value": "$ENV:STRIPE_PUBLISHABLE_KEY"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "authentication": {
+    "authenticationEssentials": {},
+    "loginDefinition": {
+      "userSettings": {
+        "superAdminIdentifier": "owner@example.com",
+        "superAdminPassword": "change-me-on-first-login",
+        "userRegisterIsPublic": true,
+        "primaryLoginIdentifier": "email",
+        "emailVerificationRequiredForLogin": false
+      }
+    },
+    "verificationServices": {
+      "verificationSettings": {}
+    },
+    "accessControl": {}
+  },
+  "bffService": {},
+  "notificationService": {
+    "serviceSettings": {
+      "serviceOptions": {}
+    }
+  },
+  "services": [
+    {
+      "serviceSettings": {
+        "serviceBasics": {
+          "name": "sales",
+          "description": "Products and orders."
+        },
+        "serviceOptions": {
+          "dbType": "postgresql"
+        }
+      },
+      "dataObjects": [
+        {
+          "objectSettings": {
+            "basicSettings": {
+              "name": "product",
+              "description": "An item for sale.",
+              "useSoftDelete": true
+            },
+            "authorization": {
+              "dataObjectAccess": "accessPublic",
+              "objectDataIsInTenantLevel": false
+            }
+          },
+          "properties": [
+            {
+              "basicSettings": {
+                "name": "name",
+                "type": "String",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "Product name."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "price",
+                "type": "Double",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "Unit price."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "currency",
+                "type": "String",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "ISO 4217 currency code.",
+                "defaultValue": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "objectSettings": {
+            "basicSettings": {
+              "name": "order",
+              "description": "A customer order. Checkout settings turn it into a payable order.",
+              "useSoftDelete": true
+            },
+            "authorization": {
+              "dataObjectAccess": "accessPrivate",
+              "objectDataIsInTenantLevel": false
+            },
+            "checkout": {
+              "objectIsAnOrderObject": true,
+              "configuration": {
+                "providerName": "stripe",
+                "orderName": "order",
+                "orderIdProperty": "id",
+                "amountProperty": "amount",
+                "currencyProperty": "currency",
+                "orderStatusProperty": "status",
+                "orderStatusUpdateDateProperty": "statusUpdatedAt",
+                "orderOwnerIdProperty": "customerId",
+                "description": {
+                  "js": "`Order ${this.order.id}`"
+                },
+                "mapPaymentResultToOrderStatus": {
+                  "paymentResultStarted": {
+                    "js": "'pending'"
+                  },
+                  "paymentResultCanceled": {
+                    "js": "'canceled'"
+                  },
+                  "paymentResultFailed": {
+                    "js": "'failed'"
+                  },
+                  "paymentResultSuccess": {
+                    "js": "'paid'"
+                  }
+                }
+              }
+            }
+          },
+          "properties": [
+            {
+              "basicSettings": {
+                "name": "productId",
+                "type": "ID",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "The ordered product.",
+                "hasRelation": true
+              },
+              "relationSettings": {
+                "relationName": "product",
+                "relationTargetObject": "product",
+                "relationTargetKey": "id",
+                "onDeleteAction": "restrict",
+                "relationIsRequired": true
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "quantity",
+                "type": "Integer",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "How many."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "amount",
+                "type": "Double",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "Total to pay."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "currency",
+                "type": "String",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "ISO 4217 currency code."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "status",
+                "type": "Enum",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "Where the order is in its life.",
+                "enumOptions": [
+                  "pending",
+                  "paid",
+                  "canceled",
+                  "failed"
+                ],
+                "defaultValue": "pending"
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "statusUpdatedAt",
+                "type": "Date",
+                "isRequired": false,
+                "allowUpdate": true,
+                "description": "When the status last changed."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "customerId",
+                "type": "ID",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "The user who placed the order.",
+                "hasRelation": true
+              },
+              "indexSettings": {
+                "indexedInDb": true
+              },
+              "relationSettings": {
+                "relationName": "customer",
+                "relationTargetObject": "user",
+                "relationTargetKey": "id",
+                "onDeleteAction": "doDelete",
+                "relationIsRequired": true
+              },
+              "sessionSettings": {
+                "sessionParam": "userId",
+                "isOwnerField": true
+              }
+            }
+          ]
+        }
+      ],
+      "businessLogic": [
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "listProducts",
+              "crudType": "list",
+              "dataObjectName": "product",
+              "apiDescription": "Lists the catalogue. Open to everyone."
+            },
+            "authOptions": {
+              "loginRequired": false
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/products"
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "createOrder",
+              "crudType": "create",
+              "dataObjectName": "order",
+              "apiDescription": "Places an order for one product. Payment starts on the generated payment route."
+            },
+            "authOptions": {
+              "loginRequired": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/orders"
+            }
+          },
+          "parameters": {
+            "requestParameters": [
+              {
+                "name": "productId",
+                "type": "ID",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "productId"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "quantity"
+              },
+              {
+                "name": "amount",
+                "type": "Double",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "amount"
+              },
+              {
+                "name": "currency",
+                "type": "String",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "currency"
+              }
+            ]
+          },
+          "query": {
+            "dataClauseItems": [
+              {
+                "name": "productId",
+                "value": {
+                  "js": "this.productId"
+                }
+              },
+              {
+                "name": "quantity",
+                "value": {
+                  "js": "this.quantity"
+                }
+              },
+              {
+                "name": "amount",
+                "value": {
+                  "js": "this.amount"
+                }
+              },
+              {
+                "name": "currency",
+                "value": {
+                  "js": "this.currency"
+                }
+              },
+              {
+                "name": "status",
+                "value": {
+                  "js": "'pending'"
+                }
+              },
+              {
+                "name": "customerId",
+                "value": {
+                  "js": "this.session.userId"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "listMyOrders",
+              "crudType": "list",
+              "dataObjectName": "order",
+              "apiDescription": "Lists the caller's orders."
+            },
+            "authOptions": {
+              "loginRequired": true,
+              "ownershipCheck": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/orders"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

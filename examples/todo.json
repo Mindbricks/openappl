@@ -1,0 +1,293 @@
+{
+  "codename": "todolist",
+  "projectSettings": {
+    "basicSettings": {
+      "name": "todolist",
+      "fullname": "Todo List",
+      "description": "A minimal OpenAPPL blueprint: users sign up and keep a private list of tasks."
+    }
+  },
+  "authentication": {
+    "authenticationEssentials": {},
+    "loginDefinition": {
+      "userSettings": {
+        "superAdminIdentifier": "owner@example.com",
+        "superAdminPassword": "change-me-on-first-login",
+        "userRegisterIsPublic": true,
+        "primaryLoginIdentifier": "email",
+        "emailVerificationRequiredForLogin": false
+      }
+    },
+    "verificationServices": {
+      "verificationSettings": {}
+    },
+    "accessControl": {}
+  },
+  "bffService": {},
+  "notificationService": {
+    "serviceSettings": {
+      "serviceOptions": {}
+    }
+  },
+  "services": [
+    {
+      "serviceSettings": {
+        "serviceBasics": {
+          "name": "tasks",
+          "description": "Each user's own task list."
+        },
+        "serviceOptions": {
+          "dbType": "postgresql"
+        }
+      },
+      "dataObjects": [
+        {
+          "objectSettings": {
+            "basicSettings": {
+              "name": "task",
+              "description": "One item on a user's list. The creator owns it.",
+              "useSoftDelete": true
+            },
+            "authorization": {
+              "dataObjectAccess": "accessPrivate",
+              "objectDataIsInTenantLevel": false
+            }
+          },
+          "properties": [
+            {
+              "basicSettings": {
+                "name": "title",
+                "type": "String",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "What has to be done."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "done",
+                "type": "Boolean",
+                "isRequired": false,
+                "allowUpdate": true,
+                "description": "Whether the task is finished.",
+                "defaultValue": false
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "dueDate",
+                "type": "Date",
+                "isRequired": false,
+                "allowUpdate": true,
+                "description": "Optional deadline."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "ownerId",
+                "type": "ID",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "The user who created the task.",
+                "hasRelation": true
+              },
+              "indexSettings": {
+                "indexedInDb": true
+              },
+              "relationSettings": {
+                "relationName": "owner",
+                "relationTargetObject": "user",
+                "relationTargetKey": "id",
+                "onDeleteAction": "doDelete",
+                "relationIsRequired": true
+              },
+              "sessionSettings": {
+                "sessionParam": "userId",
+                "isOwnerField": true
+              }
+            }
+          ]
+        }
+      ],
+      "businessLogic": [
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "createTask",
+              "crudType": "create",
+              "dataObjectName": "task",
+              "apiDescription": "Adds a task to the caller's list."
+            },
+            "authOptions": {
+              "loginRequired": true
+            }
+          },
+          "parameters": {
+            "requestParameters": [
+              {
+                "name": "title",
+                "type": "String",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "title"
+              },
+              {
+                "name": "dueDate",
+                "type": "Date",
+                "required": false,
+                "httpLocation": "body",
+                "dataPath": "dueDate"
+              }
+            ]
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/tasks"
+            }
+          },
+          "query": {
+            "dataClauseItems": [
+              {
+                "name": "title",
+                "value": {
+                  "js": "this.title"
+                }
+              },
+              {
+                "name": "dueDate",
+                "value": {
+                  "js": "this.dueDate ?? null"
+                }
+              },
+              {
+                "name": "done",
+                "value": {
+                  "js": "false"
+                }
+              },
+              {
+                "name": "ownerId",
+                "value": {
+                  "js": "this.session.userId"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "listTasks",
+              "crudType": "list",
+              "dataObjectName": "task",
+              "apiDescription": "Lists the caller's tasks, open ones first."
+            },
+            "authOptions": {
+              "loginRequired": true,
+              "ownershipCheck": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/tasks"
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "updateTask",
+              "crudType": "update",
+              "dataObjectName": "task",
+              "apiDescription": "Renames a task or marks it done."
+            },
+            "authOptions": {
+              "loginRequired": true,
+              "ownershipCheck": true
+            }
+          },
+          "parameters": {
+            "requestParameters": [
+              {
+                "name": "title",
+                "type": "String",
+                "required": false,
+                "httpLocation": "body",
+                "dataPath": "title"
+              },
+              {
+                "name": "done",
+                "type": "Boolean",
+                "required": false,
+                "httpLocation": "body",
+                "dataPath": "done"
+              }
+            ]
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/tasks/:taskId"
+            }
+          },
+          "query": {
+            "dataClauseItems": [
+              {
+                "name": "title",
+                "value": {
+                  "js": "this.title"
+                }
+              },
+              {
+                "name": "done",
+                "value": {
+                  "js": "this.done"
+                }
+              }
+            ],
+            "selectClause": {
+              "selectProperties": [
+                "id",
+                "title",
+                "done",
+                "dueDate"
+              ]
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "deleteTask",
+              "crudType": "delete",
+              "dataObjectName": "task",
+              "apiDescription": "Removes a task from the caller's list."
+            },
+            "authOptions": {
+              "loginRequired": true,
+              "ownershipCheck": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/tasks/:taskId"
+            }
+          },
+          "query": {
+            "selectClause": {
+              "selectProperties": [
+                "id",
+                "title",
+                "done",
+                "dueDate"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

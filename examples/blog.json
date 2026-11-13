@@ -1,0 +1,482 @@
+{
+  "codename": "blogsite",
+  "projectSettings": {
+    "basicSettings": {
+      "name": "blogsite",
+      "fullname": "Blog",
+      "description": "Authors publish posts; anyone can read published posts and signed-in readers can comment."
+    }
+  },
+  "authentication": {
+    "authenticationEssentials": {},
+    "loginDefinition": {
+      "userSettings": {
+        "superAdminIdentifier": "owner@example.com",
+        "superAdminPassword": "change-me-on-first-login",
+        "userRegisterIsPublic": true,
+        "primaryLoginIdentifier": "email",
+        "emailVerificationRequiredForLogin": false
+      }
+    },
+    "verificationServices": {
+      "verificationSettings": {}
+    },
+    "accessControl": {}
+  },
+  "bffService": {},
+  "notificationService": {
+    "serviceSettings": {
+      "serviceOptions": {}
+    }
+  },
+  "services": [
+    {
+      "serviceSettings": {
+        "serviceBasics": {
+          "name": "content",
+          "description": "Posts and comments."
+        },
+        "serviceOptions": {
+          "dbType": "postgresql"
+        }
+      },
+      "dataObjects": [
+        {
+          "objectSettings": {
+            "basicSettings": {
+              "name": "post",
+              "description": "A blog post. Its author owns it; only published posts are public.",
+              "useSoftDelete": true
+            },
+            "authorization": {
+              "dataObjectAccess": "accessPublic",
+              "objectDataIsInTenantLevel": false
+            }
+          },
+          "properties": [
+            {
+              "basicSettings": {
+                "name": "title",
+                "type": "String",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "Headline of the post."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "body",
+                "type": "Text",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "The post content in Markdown."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "status",
+                "type": "Enum",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "Draft posts are visible to their author only.",
+                "enumOptions": [
+                  "draft",
+                  "published"
+                ],
+                "defaultValue": "draft"
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "publishedAt",
+                "type": "Date",
+                "isRequired": false,
+                "allowUpdate": true,
+                "description": "When the post was published."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "authorId",
+                "type": "ID",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "The user who wrote the post.",
+                "hasRelation": true
+              },
+              "indexSettings": {
+                "indexedInDb": true
+              },
+              "relationSettings": {
+                "relationName": "author",
+                "relationTargetObject": "user",
+                "relationTargetKey": "id",
+                "onDeleteAction": "doDelete",
+                "relationIsRequired": true
+              },
+              "sessionSettings": {
+                "sessionParam": "userId",
+                "isOwnerField": true
+              }
+            }
+          ]
+        },
+        {
+          "objectSettings": {
+            "basicSettings": {
+              "name": "comment",
+              "description": "A reader comment under a post.",
+              "useSoftDelete": true
+            },
+            "authorization": {
+              "dataObjectAccess": "accessPublic",
+              "objectDataIsInTenantLevel": false
+            }
+          },
+          "properties": [
+            {
+              "basicSettings": {
+                "name": "text",
+                "type": "Text",
+                "isRequired": true,
+                "allowUpdate": true,
+                "description": "The comment."
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "postId",
+                "type": "ID",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "The post the comment belongs to.",
+                "hasRelation": true
+              },
+              "indexSettings": {
+                "indexedInDb": true
+              },
+              "relationSettings": {
+                "relationName": "post",
+                "relationTargetObject": "post",
+                "relationTargetKey": "id",
+                "onDeleteAction": "doDelete",
+                "relationIsRequired": true
+              }
+            },
+            {
+              "basicSettings": {
+                "name": "commenterId",
+                "type": "ID",
+                "isRequired": true,
+                "allowUpdate": false,
+                "description": "The user who wrote the comment.",
+                "hasRelation": true
+              },
+              "indexSettings": {
+                "indexedInDb": true
+              },
+              "relationSettings": {
+                "relationName": "commenter",
+                "relationTargetObject": "user",
+                "relationTargetKey": "id",
+                "onDeleteAction": "doDelete",
+                "relationIsRequired": true
+              },
+              "sessionSettings": {
+                "sessionParam": "userId",
+                "isOwnerField": true
+              }
+            }
+          ]
+        }
+      ],
+      "businessLogic": [
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "createPost",
+              "crudType": "create",
+              "dataObjectName": "post",
+              "apiDescription": "Starts a new post as a draft."
+            },
+            "authOptions": {
+              "loginRequired": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts"
+            }
+          },
+          "parameters": {
+            "requestParameters": [
+              {
+                "name": "title",
+                "type": "String",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "title"
+              },
+              {
+                "name": "body",
+                "type": "Text",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "body"
+              }
+            ]
+          },
+          "query": {
+            "dataClauseItems": [
+              {
+                "name": "title",
+                "value": {
+                  "js": "this.title"
+                }
+              },
+              {
+                "name": "body",
+                "value": {
+                  "js": "this.body"
+                }
+              },
+              {
+                "name": "status",
+                "value": {
+                  "js": "'draft'"
+                }
+              },
+              {
+                "name": "authorId",
+                "value": {
+                  "js": "this.session.userId"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "publishPost",
+              "crudType": "update",
+              "dataObjectName": "post",
+              "apiDescription": "Publishes one of the caller's drafts."
+            },
+            "authOptions": {
+              "loginRequired": true,
+              "ownershipCheck": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts/:postId/publish"
+            }
+          },
+          "query": {
+            "dataClauseItems": [
+              {
+                "name": "status",
+                "value": {
+                  "js": "'published'"
+                }
+              },
+              {
+                "name": "publishedAt",
+                "value": {
+                  "js": "new Date()"
+                }
+              }
+            ],
+            "selectClause": {
+              "selectProperties": [
+                "id",
+                "title",
+                "status",
+                "publishedAt"
+              ]
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "deletePost",
+              "crudType": "delete",
+              "dataObjectName": "post",
+              "apiDescription": "Deletes one of the caller's posts and its comments."
+            },
+            "authOptions": {
+              "loginRequired": true,
+              "ownershipCheck": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts/:postId"
+            }
+          },
+          "query": {
+            "selectClause": {
+              "selectProperties": [
+                "id",
+                "title"
+              ]
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "listPublishedPosts",
+              "crudType": "list",
+              "dataObjectName": "post",
+              "apiDescription": "Lists published posts, newest first. Open to everyone."
+            },
+            "authOptions": {
+              "loginRequired": false
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts"
+            }
+          },
+          "query": {
+            "whereClause": {
+              "fullWhereClause": {
+                "js": "{ status: 'published' }"
+              }
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "getPost",
+              "crudType": "get",
+              "dataObjectName": "post",
+              "apiDescription": "Reads one published post. Open to everyone."
+            },
+            "authOptions": {
+              "loginRequired": false
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts/:postId"
+            }
+          },
+          "query": {
+            "whereClause": {
+              "fullWhereClause": {
+                "js": "{ status: 'published' }"
+              }
+            }
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "addComment",
+              "crudType": "create",
+              "dataObjectName": "comment",
+              "apiDescription": "Adds a comment to a post."
+            },
+            "authOptions": {
+              "loginRequired": true
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts/:postId/comments"
+            }
+          },
+          "parameters": {
+            "requestParameters": [
+              {
+                "name": "postId",
+                "type": "ID",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "postId"
+              },
+              {
+                "name": "text",
+                "type": "Text",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "text"
+              }
+            ]
+          },
+          "query": {
+            "dataClauseItems": [
+              {
+                "name": "postId",
+                "value": {
+                  "js": "this.postId"
+                }
+              },
+              {
+                "name": "text",
+                "value": {
+                  "js": "this.text"
+                }
+              },
+              {
+                "name": "commenterId",
+                "value": {
+                  "js": "this.session.userId"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "basics": {
+            "apiOptions": {
+              "name": "listComments",
+              "crudType": "list",
+              "dataObjectName": "comment",
+              "apiDescription": "Lists the comments of a post. Open to everyone."
+            },
+            "authOptions": {
+              "loginRequired": false
+            }
+          },
+          "controllers": {
+            "restSettings": {
+              "hasRestController": true,
+              "routePath": "/posts/:postId/comments"
+            }
+          },
+          "parameters": {
+            "requestParameters": [
+              {
+                "name": "postId",
+                "type": "ID",
+                "required": true,
+                "httpLocation": "body",
+                "dataPath": "postId"
+              }
+            ]
+          },
+          "query": {
+            "whereClause": {
+              "fullWhereClause": {
+                "js": "{ postId: this.postId }"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
